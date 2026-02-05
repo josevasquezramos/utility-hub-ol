@@ -33,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/schedule/activity/{activity}', [ScheduleController::class, 'deleteActivity'])->name('schedule.activity.delete');
     Route::post('/schedule/assignment', [ScheduleController::class, 'updateAssignment'])->name('schedule.assignment.update');
     Route::post('/schedule/export-pdf', [ScheduleExportController::class, 'download'])->name('schedule.export-pdf');
+    Route::post('/schedule/export-excel', [ScheduleExportController::class, 'downloadExcel'])->name('schedule.export-excel');
 });
 
 require __DIR__.'/auth.php';

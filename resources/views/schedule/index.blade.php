@@ -70,13 +70,20 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div class="mb-6 flex justify-between items-center">
+            <div class="mb-6 flex justify-end items-center gap-x-2">
                 <button onclick="openModal('activityModal')"
                     class="inline-flex items-center px-3 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
                     Actividad
+                </button>
+                <button onclick="openModal('excelModal')"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Exportar
                 </button>
             </div>
 
@@ -258,6 +265,32 @@
         </div>
     </div>
 
+    <div id="excelModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-visible">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Exportar Reporte Excel</h3>
+                <p class="text-sm text-gray-500 mt-1">Todas las actividades en formato Excel.</p>
+            </div>
+            <form action="{{ route('schedule.export-excel') }}" method="POST">
+                @csrf
+                <div class="px-6 py-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona Rango de Fechas</label>
+                    <div class="w-full">
+                        <input type="text" name="date_range" id="excelDateRangePicker"
+                            class="w-full border-gray-300 rounded-md shadow-sm pl-4 focus:ring-green-500 focus:border-green-500 bg-white"
+                            placeholder="Seleccionar fechas..." required>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('excelModal')" class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" onclick="closeModal('excelModal')" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 flex items-center">
+                        Descargar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="successToast"
         class="fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-lg hidden z-50 max-w-md">
         <div class="flex items-start justify-between">
@@ -280,6 +313,7 @@
     <script>
         let currentActivityId = null;
         let fpInstance;
+        let fpExcelInstance;
 
         document.addEventListener('DOMContentLoaded', function () {
             fpInstance = flatpickr("#dateRangePicker", {
@@ -293,13 +327,24 @@
                 static: true
             });
 
+            fpExcelInstance = flatpickr("#excelDateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                locale: "es",
+                defaultDate: ["{{ $date->copy()->startOfMonth()->format('Y-m-d') }}", "{{ $date->copy()->endOfMonth()->format('Y-m-d') }}"],
+                altInput: true,
+                altFormat: "j F, Y",
+                altInputClass: "w-full border-gray-300 rounded-md shadow-sm pl-4 focus:ring-green-500 focus:border-green-500 bg-white",
+                static: true
+            });
+
             const pendingSuccess = sessionStorage.getItem('schedule_success');
             if (pendingSuccess) {
                 showToast('success', pendingSuccess);
                 sessionStorage.removeItem('schedule_success');
             }
 
-            const modals = ['activityModal', 'deleteModal', 'exportModal'];
+            const modals = ['activityModal', 'deleteModal', 'exportModal', 'excelModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (modal) {
@@ -320,6 +365,11 @@
             if (input && input.id !== 'dateRangePicker') {
                 setTimeout(() => { input.focus(); if (input.select) input.select(); }, 50);
             }
+        }
+
+        function openExcelModal() {
+            fpExcelInstance.setDate(["{{ $date->copy()->startOfMonth()->format('Y-m-d') }}", "{{ $date->copy()->endOfMonth()->format('Y-m-d') }}"], true);
+            openModal('excelModal');
         }
 
         function closeModal(modalId) {
