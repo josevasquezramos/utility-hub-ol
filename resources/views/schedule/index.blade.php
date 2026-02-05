@@ -1,4 +1,47 @@
 <x-app-layout>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+
+    <style>
+        .flatpickr-wrapper {
+            width: 100% !important;
+            display: block !important;
+        }
+
+        .flatpickr-input,
+        input.flatpickr-input {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .flatpickr-calendar {
+            z-index: 99999 !important;
+        }
+
+        .min-w-full td input {
+            height: 4rem !important;
+            min-height: 4rem !important;
+        }
+
+        .overflow-x-auto {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f7fafc;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 4px;
+        }
+    </style>
+
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -27,7 +70,7 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div class="mb-6">
+            <div class="mb-6 flex justify-between items-center">
                 <button onclick="openModal('activityModal')"
                     class="inline-flex items-center px-3 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,24 +86,40 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th
-                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 min-w-[120px]">
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-20 border-r border-gray-200 min-w-[120px]">
                                     Fecha
                                 </th>
                                 @foreach($activities as $activity)
                                     <th
                                         class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px] relative group">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="truncate">{{ $activity->name }}</span>
+                                            <span class="truncate"
+                                                title="{{ $activity->name }}">{{ $activity->name }}</span>
 
-                                            <button type="button"
-                                                onclick="openDeleteModal('{{ $activity->id }}', '{{ addslashes($activity->name) }}')"
-                                                class="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors duration-150"
-                                                title="Eliminar actividad">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
+                                            <div class="flex items-center gap-1">
+                                                <button type="button"
+                                                    onclick="openExportModal('{{ $activity->id }}', '{{ addslashes($activity->name) }}')"
+                                                    class="text-blue-400 hover:text-blue-600 p-1 transition-colors duration-150"
+                                                    title="Descargar PDF">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                    </svg>
+                                                </button>
+
+                                                <button type="button"
+                                                    onclick="openDeleteModal('{{ $activity->id }}', '{{ addslashes($activity->name) }}')"
+                                                    class="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors duration-150"
+                                                    title="Eliminar actividad">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </th>
                                 @endforeach
@@ -82,8 +141,8 @@
                                     <td
                                         class="px-4 py-3 text-sm sticky left-0 {{ $rowClass }} z-10 border-r border-gray-200">
                                         <div class="font-medium text-gray-900">
-                                            {{ $day->format('d/m/Y') }} <br> <span
-                                                class="text-gray-500">{{ $dayName }}</span>
+                                            {{ $day->format('d/m/Y') }} <br>
+                                            <span class="text-gray-500">{{ $dayName }}</span>
                                         </div>
                                     </td>
 
@@ -167,46 +226,99 @@
         </div>
     </div>
 
+    <div id="exportModal"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-visible">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Descargar Cronograma</h3>
+                <p class="text-sm text-gray-500 mt-1">Actividad: <span id="exportActivityName" class="font-bold"></span>
+                </p>
+            </div>
+            <form action="{{ route('schedule.export-pdf') }}" method="POST" target="_blank">
+                @csrf
+                <input type="hidden" name="activity_id" id="exportActivityId">
+                <div class="px-6 py-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Selecciona Rango de Fechas</label>
+
+                    <div class="w-full">
+                        <input type="text" name="date_range" id="dateRangePicker"
+                            class="w-full border-gray-300 rounded-md shadow-sm pl-4 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                            placeholder="Seleccionar..." required>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('exportModal')"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50">Cancelar</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 flex items-center">
+                        Generar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="successToast"
         class="fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-lg hidden z-50 max-w-md">
         <div class="flex items-start justify-between">
-            <div>
-                <span id="successMessage"></span>
-            </div>
-            <button onclick="hideToast('successToast')" class="ml-4 text-green-600 hover:text-green-800">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <div><span id="successMessage"></span></div>
+            <button onclick="hideToast('successToast')" class="ml-4 text-green-600 hover:text-green-800">x</button>
         </div>
     </div>
 
     <div id="errorToast"
         class="fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-lg hidden z-50 max-w-md">
         <div class="flex items-start justify-between">
-            <div>
-                <span id="errorMessage"></span>
-            </div>
-            <button onclick="hideToast('errorToast')" class="ml-4 text-red-600 hover:text-red-800">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <div><span id="errorMessage"></span></div>
+            <button onclick="hideToast('errorToast')" class="ml-4 text-red-600 hover:text-red-800">x</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
     <script>
         let currentActivityId = null;
+        let fpInstance;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fpInstance = flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                locale: "es",
+                defaultDate: ["{{ $date->copy()->startOfMonth()->format('Y-m-d') }}", "{{ $date->copy()->endOfMonth()->format('Y-m-d') }}"],
+                altInput: true,
+                altFormat: "j F, Y",
+                altInputClass: "w-full border-gray-300 rounded-md shadow-sm pl-4 focus:ring-indigo-500 focus:border-indigo-500 bg-white", // <-- Clases añadidas aquí
+                static: true
+            });
+
+            const pendingSuccess = sessionStorage.getItem('schedule_success');
+            if (pendingSuccess) {
+                showToast('success', pendingSuccess);
+                sessionStorage.removeItem('schedule_success');
+            }
+
+            const modals = ['activityModal', 'deleteModal', 'exportModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === this) closeModal(modalId);
+                    });
+                }
+            });
+
+            @if(session('success')) showToast('success', "{{ session('success') }}"); @endif
+            @if($errors->any()) showToast('error', "{{ $errors->first() }}"); @endif
+        });
 
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.remove('hidden');
             const input = modal.querySelector('input[type="text"]');
-            if (input) {
-                setTimeout(() => {
-                    input.focus();
-                    input.select();
-                }, 50);
+            if (input && input.id !== 'dateRangePicker') {
+                setTimeout(() => { input.focus(); if (input.select) input.select(); }, 50);
             }
         }
 
@@ -219,6 +331,13 @@
             document.getElementById('activityNameToDelete').textContent = activityName;
             document.getElementById('deleteForm').action = `/schedule/activity/${activityId}`;
             openModal('deleteModal');
+        }
+
+        function openExportModal(activityId, activityName) {
+            document.getElementById('exportActivityId').value = activityId;
+            document.getElementById('exportActivityName').innerText = activityName;
+            fpInstance.setDate(["{{ $date->copy()->startOfMonth()->format('Y-m-d') }}", "{{ $date->copy()->endOfMonth()->format('Y-m-d') }}"], true);
+            openModal('exportModal');
         }
 
         function showToast(type, message) {
@@ -242,36 +361,9 @@
             document.getElementById(toastId).classList.add('hidden');
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-
-            const pendingSuccess = sessionStorage.getItem('schedule_success');
-            if (pendingSuccess) {
-                showToast('success', pendingSuccess);
-                sessionStorage.removeItem('schedule_success');
-            }
-
-            const modals = ['activityModal', 'deleteModal'];
-            modals.forEach(modalId => {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.addEventListener('click', function (e) {
-                        if (e.target === this) closeModal(modalId);
-                    });
-                }
-            });
-
-            @if(session('success'))
-                showToast('success', "{{ session('success') }}");
-            @endif
-            @if($errors->any())
-                showToast('error', "{{ $errors->first() }}");
-            @endif
-    });
-
         async function saveAssignment(input, date, activityId) {
             const originalValue = input.defaultValue;
             const newValue = input.value.trim();
-
             if (originalValue === newValue) return;
 
             input.classList.remove('bg-red-100', 'ring-red-400');
@@ -285,64 +377,43 @@
                         "X-CSRF-TOKEN": "{{ csrf_token() }}",
                         "Accept": "application/json"
                     },
-                    body: JSON.stringify({
-                        date: date,
-                        activity_id: activityId,
-                        assignee_name: newValue
-                    })
+                    body: JSON.stringify({ date: date, activity_id: activityId, assignee_name: newValue })
                 });
 
                 if (response.ok) {
                     input.classList.remove('bg-yellow-50', 'ring-yellow-400');
                     input.classList.add('bg-green-50', 'ring-2', 'ring-green-400');
-
-                    setTimeout(() => {
-                        input.classList.remove('bg-green-50', 'ring-2', 'ring-green-400');
-                    }, 1000);
-
+                    setTimeout(() => { input.classList.remove('bg-green-50', 'ring-2', 'ring-green-400'); }, 1000);
                     input.defaultValue = newValue;
-                } else {
-                    throw new Error('Error al guardar');
-                }
+                } else { throw new Error('Error al guardar'); }
             } catch (error) {
-                console.error(error);
                 input.classList.remove('bg-yellow-50', 'ring-yellow-400');
                 input.classList.add('bg-red-100', 'ring-2', 'ring-red-400');
-                showToast('error', 'No se pudo guardar el cambio.');
+                showToast('error', 'No se pudo guardar.');
             }
         }
 
         document.getElementById('activityForm')?.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            handleFormSubmit(this, 'POST');
+            e.preventDefault(); handleFormSubmit(this, 'POST');
         });
 
         document.getElementById('deleteForm')?.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            handleFormSubmit(this, 'DELETE');
+            e.preventDefault(); handleFormSubmit(this, 'DELETE');
         });
 
         async function handleFormSubmit(form, method) {
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             const formData = new FormData(form);
-
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span> Procesando...';
+            submitBtn.innerHTML = '<span class="animate-spin inline-block mr-2">↻</span>...';
 
             try {
                 const options = {
                     method: method,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 };
-
-                if (method === 'POST') {
-                    options.body = formData;
-                }
+                if (method === 'POST') options.body = formData;
 
                 const response = await fetch(form.action, options);
                 const data = await response.json();
@@ -351,43 +422,14 @@
                     sessionStorage.setItem('schedule_success', data.message);
                     window.location.reload();
                 } else {
-                    showToast('error', data.message || 'Ocurrió un error.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    showToast('error', data.message || 'Error.');
+                    submitBtn.disabled = false; submitBtn.textContent = originalText;
                     closeModal(form.closest('.fixed').id);
                 }
-
             } catch (error) {
-                console.error('Error:', error);
                 showToast('error', 'Error de conexión.');
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.disabled = false; submitBtn.textContent = originalText;
             }
         }
     </script>
-
-    <style>
-        .min-w-full td input {
-            height: 4rem !important;
-            min-height: 4rem !important;
-        }
-
-        .overflow-x-auto {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e0 #f7fafc;
-        }
-
-        .overflow-x-auto::-webkit-scrollbar {
-            height: 8px;
-        }
-
-        .overflow-x-auto::-webkit-scrollbar-track {
-            background: #f7fafc;
-        }
-
-        .overflow-x-auto::-webkit-scrollbar-thumb {
-            background-color: #cbd5e0;
-            border-radius: 4px;
-        }
-    </style>
 </x-app-layout>

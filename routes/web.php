@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ScheduleExportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/schedule/activity', [ScheduleController::class, 'storeActivity'])->name('schedule.activity.store');
     Route::delete('/schedule/activity/{activity}', [ScheduleController::class, 'deleteActivity'])->name('schedule.activity.delete');
     Route::post('/schedule/assignment', [ScheduleController::class, 'updateAssignment'])->name('schedule.assignment.update');
+    Route::post('/schedule/export-pdf', [ScheduleExportController::class, 'download'])->name('schedule.export-pdf');
 });
 
 require __DIR__.'/auth.php';
