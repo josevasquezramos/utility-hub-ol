@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ConversionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ScheduleExportController;
@@ -34,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/schedule/assignment', [ScheduleController::class, 'updateAssignment'])->name('schedule.assignment.update');
     Route::post('/schedule/export-pdf', [ScheduleExportController::class, 'download'])->name('schedule.export-pdf');
     Route::post('/schedule/export-excel', [ScheduleExportController::class, 'downloadExcel'])->name('schedule.export-excel');
+
+    Route::get('/conversions', [ConversionController::class, 'index'])->name('conversions.index');
 });
 
 require __DIR__.'/auth.php';
