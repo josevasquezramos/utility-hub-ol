@@ -153,7 +153,7 @@
 
             const loader = new GLTFLoader();
 
-            loader.load("{{ asset('models/modelo.glb') }}", (gltf) => {
+            loader.load("{{ asset('models/warehouse.glb') }}", (gltf) => {
                 const model = gltf.scene;
 
                 const box = new THREE.Box3().setFromObject(model);
