@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Warehouse3DController;
 use App\Http\Controllers\ConversionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
@@ -37,6 +38,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/schedule/export-excel', [ScheduleExportController::class, 'downloadExcel'])->name('schedule.export-excel');
 
     Route::get('/conversions', [ConversionController::class, 'index'])->name('conversions.index');
+
+    Route::get('/warehouse-3d', [Warehouse3DController::class, 'index'])->name('warehouse3d.index');
+    Route::post('/warehouse-3d/tag', [Warehouse3DController::class, 'storeTag'])->name('warehouse3d.storeTag');
+    Route::post('/warehouse-3d/tag/delete', [Warehouse3DController::class, 'deleteTag'])->name('warehouse3d.deleteTag');
 });
 
 require __DIR__.'/auth.php';
