@@ -18,7 +18,7 @@
                         
                         <button @click="open = ! open" @click.outside="open = false" 
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out h-full focus:outline-none
-                            {{ request()->routeIs('schedule.*') || request()->routeIs('conversions.*') 
+                            {{ request()->routeIs('schedule.*') || request()->routeIs('conversions.*') || request()->routeIs('warehouse3d.*')
                                 ? 'border-indigo-400 text-gray-900' 
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' 
                             }}">
@@ -39,15 +39,24 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="transform opacity-100 scale-100"
                              x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute z-50 mt-2 w-48 rounded-md shadow-lg origin-top-left top-full left-0 bg-white ring-1 ring-black ring-opacity-5 py-1"
+                             class="absolute z-50 mt-2 w-56 rounded-md shadow-lg origin-top-left top-full left-0 bg-white ring-1 ring-black ring-opacity-5 py-1"
                              style="display: none; margin-top: 1px;"> 
                             
-                            <a href="{{ route('schedule.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition ease-in-out duration-150">
-                                {{ __('Cronograma') }}
+                            <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+                                Oficina
+                            </div>
+                            <a href="{{ route('schedule.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition ease-in-out duration-150">
+                                Cronograma
                             </a>
-                            
-                            <a href="{{ route('conversions.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition ease-in-out duration-150">
-                                {{ __('Conversiones') }}
+
+                            <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-y border-gray-100 mt-1">
+                                Logística
+                            </div>
+                            <a href="{{ route('conversions.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600 transition ease-in-out duration-150">
+                                Conversiones
+                            </a>
+                            <a href="{{ route('warehouse3d.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-orange-600 transition ease-in-out duration-150">
+                                Almacén 3D
                             </a>
                         </div>
                     </div>
@@ -60,7 +69,6 @@
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
                             <div>{{ Auth::user()->name }}</div>
-
                             <div class="ms-1">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -68,27 +76,18 @@
                             </div>
                         </button>
                     </x-slot>
-
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Perfil') }}
-                        </x-dropdown-link>
-
+                        <x-dropdown-link :href="route('profile.edit')">{{ __('Perfil') }}</x-dropdown-link>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Cerrar Sesión') }}
-                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">{{ __('Cerrar Sesión') }}</x-dropdown-link>
                         </form>
                     </x-slot>
                 </x-dropdown>
             </div>
 
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -104,15 +103,17 @@
                 {{ __('Inicio') }}
             </x-responsive-nav-link>
 
-            <div class="border-t border-gray-200 my-2"></div>
-            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-bold">Módulos</div>
-            
+            <div class="border-t border-gray-200 mt-2 pt-2 px-4 pb-1 text-xs font-bold text-gray-400 uppercase">Oficina</div>
             <x-responsive-nav-link :href="route('schedule.index')" :active="request()->routeIs('schedule.*')">
                 {{ __('Cronograma') }}
             </x-responsive-nav-link>
             
+            <div class="border-t border-gray-200 mt-2 pt-2 px-4 pb-1 text-xs font-bold text-gray-400 uppercase">Logística</div>
             <x-responsive-nav-link :href="route('conversions.index')" :active="request()->routeIs('conversions.*')">
                 {{ __('Conversiones') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('warehouse3d.index')" :active="request()->routeIs('warehouse3d.*')">
+                {{ __('Almacén 3D') }}
             </x-responsive-nav-link>
         </div>
 
@@ -121,20 +122,11 @@
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
-
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Perfil') }}
-                </x-responsive-nav-link>
-
+                <x-responsive-nav-link :href="route('profile.edit')">{{ __('Perfil') }}</x-responsive-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Cerrar Sesión') }}
-                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">{{ __('Cerrar Sesión') }}</x-responsive-nav-link>
                 </form>
             </div>
         </div>
