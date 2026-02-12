@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Block;
 
 class BlockSeeder extends Seeder
 {
@@ -13,13 +13,13 @@ class BlockSeeder extends Seeder
     public function run(): void
     {
         $blocks = [
-            ['name' => 'bloque1', 'display_name' => 'Edificio A', 'tags' => ['termocontraibles', 'terminales']],
-            ['name' => 'bloque2', 'display_name' => 'Almacén', 'tags' => ['carga', 'inventario']],
-            ['name' => 'bloque3', 'display_name' => 'Comedor', 'tags' => ['alimentación', 'descanso']],
+            ['name' => 'bloque1', 'tags' => ['termocontraibles', 'terminales']],
+            ['name' => 'bloque2', 'tags' => ['carga', 'inventario']],
+            ['name' => 'bloque3', 'tags' => ['alimentación', 'descanso']],
         ];
 
         foreach ($blocks as $block) {
-            \App\Models\Block::updateOrCreate(['name' => $block['name']], $block);
+            Block::updateOrCreate(['name' => $block['name']], $block);
         }
     }
 }

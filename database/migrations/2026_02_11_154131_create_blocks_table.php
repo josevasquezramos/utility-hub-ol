@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('blocks', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->string('display_name')->nullable();
             $table->json('tags')->nullable();
             $table->timestamps();
         });

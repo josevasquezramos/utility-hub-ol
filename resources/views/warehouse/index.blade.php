@@ -72,11 +72,10 @@
                             <span
                                 class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Seleccionado</span>
                             <h2 id="lblBlockName" class="text-lg font-bold text-gray-800 leading-tight">--</h2>
-                            <p id="lblBlockDisplay" class="text-xs text-gray-400 font-mono mt-0.5">ID: --</p>
                         </div>
 
                         <div class="mb-3">
-                            <label class="text-xs font-bold text-gray-500 uppercase">Etiquetas:</label>
+                            <label class="text-xs font-bold text-gray-500">Etiquetas:</label>
 
                             <div id="tagsList"
                                 class="flex flex-wrap gap-1.5 mt-2 min-h-[30px] max-h-[5.5rem] overflow-y-auto custom-scrollbar content-start">
@@ -107,8 +106,8 @@
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
         <script type="importmap">
-                { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-            </script>
+                    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+                </script>
 
         <script type="module">
             import * as THREE from 'three';
@@ -120,7 +119,9 @@
                 mode: 'view',
                 selectedBlockName: null,
                 meshes: {},
-                originalMaterials: {}
+                originalMaterials: {},
+                targetCameraPos: null,
+                targetLookAt: null
             };
 
             const container = document.getElementById('canvas-container');
@@ -157,21 +158,17 @@
 
             loader.load("{{ asset('models/warehouse.glb') }}", (gltf) => {
                 const model = gltf.scene;
-
                 const box = new THREE.Box3().setFromObject(model);
                 const center = box.getCenter(new THREE.Vector3());
                 model.position.sub(center);
                 model.position.y = 0;
-
                 scene.add(model);
 
                 model.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
-
                         const dbRecord = dbBlocks.find(b => b.name === child.name);
-
                         if (dbRecord) {
                             child.material = child.material.clone();
                             state.meshes[child.name] = child;
@@ -183,7 +180,6 @@
                 const loaderEl = document.getElementById('loaderOverlay');
                 loaderEl.style.opacity = '0';
                 setTimeout(() => loaderEl.remove(), 500);
-
             }, undefined, (err) => console.error(err));
 
             const raycaster = new THREE.Raycaster();
@@ -191,7 +187,6 @@
 
             window.addEventListener('click', (event) => {
                 if (event.target.closest('.absolute.z-10') || event.target.closest('#appModal')) return;
-
                 if (state.mode !== 'edit') return;
 
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -216,21 +211,31 @@
             function selectBlock(name) {
                 state.selectedBlockName = name;
                 const blockData = dbBlocks.find(b => b.name === name);
-
                 resetColors();
 
                 if (state.meshes[name]) {
                     state.meshes[name].material.color.setHex(0xffaa00);
+                    focusOnMesh(state.meshes[name]);
                 }
 
                 document.getElementById('emptySelection').classList.add('hidden');
                 const editor = document.getElementById('blockEditor');
                 editor.classList.remove('hidden');
                 editor.classList.add('flex');
-
-                document.getElementById('lblBlockName').innerText = blockData.display_name || blockData.name;
-                document.getElementById('lblBlockDisplay').innerText = "ID: " + blockData.name;
+                document.getElementById('lblBlockName').innerText = blockData.name;
                 renderTags(blockData.tags);
+            }
+
+            function focusOnMesh(mesh) {
+                const box = new THREE.Box3().setFromObject(mesh);
+                const center = box.getCenter(new THREE.Vector3());
+
+                state.targetLookAt = center.clone();
+                state.targetCameraPos = new THREE.Vector3(
+                    center.x + 5,
+                    center.y + 5,
+                    center.z + 5
+                );
             }
 
             function renderTags(tags) {
@@ -243,20 +248,16 @@
                 tags.forEach(tag => {
                     const badge = document.createElement('div');
                     badge.className = "flex items-center bg-indigo-50 text-indigo-700 text-[10px] font-bold pl-2 pr-1 py-1 rounded-full border border-indigo-100 shadow-sm shrink-0";
-
                     const text = document.createElement('span');
                     text.innerText = tag;
                     badge.appendChild(text);
-
                     const closeBtn = document.createElement('button');
                     closeBtn.innerHTML = "&times;";
-                    closeBtn.className = "ml-1.5 text-indigo-400 hover:text-red-500 font-bold px-1 rounded hover:bg-red-50 transition";
-
+                    closeBtn.className = "ml-1.5 text-indigo-400 hover:text-red-500 font-bold px-1 rounded transition";
                     closeBtn.onclick = (e) => {
                         e.stopPropagation();
                         deleteTagAction(tag);
                     };
-
                     badge.appendChild(closeBtn);
                     container.appendChild(badge);
                 });
@@ -278,9 +279,7 @@
             searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 const feedback = document.getElementById('searchFeedback');
-
                 resetColors();
-
                 if (term.length < 2) {
                     feedback.classList.add('hidden');
                     feedback.innerHTML = '';
@@ -288,55 +287,21 @@
                 }
 
                 const matches = dbBlocks.filter(b => b.tags && b.tags.some(t => t.toLowerCase().includes(term)));
-
                 feedback.classList.remove('hidden');
 
                 if (matches.length > 0) {
-                    let html = `
-                <div class="mb-2 p-2 bg-indigo-50 border border-indigo-100 rounded flex justify-between items-center">
-                    <span class="text-indigo-800 font-bold text-xs">Se encontraron ${matches.length} coincidencias</span>
-                </div>
-            `;
-
+                    let html = `<div class="mb-2 p-2 bg-indigo-50 border border-indigo-100 rounded flex justify-between items-center"><span class="text-indigo-800 font-bold text-xs">Se encontraron ${matches.length} coincidencias</span></div>`;
                     html += `<div class="max-h-60 overflow-y-auto custom-scrollbar space-y-2 pr-1">`;
-
                     matches.forEach(m => {
                         if (state.meshes[m.name]) state.meshes[m.name].material.color.set(0x00ff00);
-
                         const matchedTags = m.tags.filter(t => t.toLowerCase().includes(term));
-
-                        const tagsBadges = matchedTags.map(tag =>
-                            `<span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">
-                        ${tag}
-                    </span>`
-                        ).join('');
-
-                        const displayName = m.display_name || m.name;
-
-                        html += `
-                    <div class="result-item bg-white p-2.5 rounded border border-gray-200 shadow-sm hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" data-block="${m.name}">
-                        <div class="flex items-start justify-between mb-1">
-                            <div>
-                                <span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition block leading-tight">${displayName}</span>
-                                <span class="text-[10px] text-gray-400 font-mono">ID: ${m.name}</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-1.5 pt-1.5 border-t border-gray-50">
-                            <span class="text-[10px] text-gray-400 block mb-1">Coincidencias:</span>
-                            <div class="flex flex-wrap">
-                                ${tagsBadges}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                        const tagsBadges = matchedTags.map(tag => `<span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">${tag}</span>`).join('');
+                        html += `<div class="result-item bg-white p-2.5 rounded border border-gray-200 shadow-sm hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" data-block="${m.name}"><div class="flex items-start justify-between mb-1"><div><span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition block leading-tight">${m.name}</span></div></div><div class="mt-1.5 pt-1.5 border-t border-gray-50"><div class="flex flex-wrap">${tagsBadges}</div></div></div>`;
                     });
-
                     html += `</div>`;
                     feedback.innerHTML = html;
-
                 } else {
-                    feedback.innerHTML = `<div class="p-3 bg-red-50 text-red-500 text-xs border border-red-100 rounded text-center">No se encontraron etiquetas con "${term}"</div>`;
+                    feedback.innerHTML = `<div class="p-3 bg-red-50 text-red-500 text-xs border border-red-300 rounded text-center">No se encontraron etiquetas con "${term}"</div>`;
                 }
             });
 
@@ -346,10 +311,10 @@
                     const blockName = item.dataset.block;
                     if (state.meshes[blockName]) {
                         const mesh = state.meshes[blockName];
+                        resetColors();
                         mesh.material.color.setHex(0x00ffff);
-                        setTimeout(() => {
-                            mesh.material.color.setHex(0x00ff00);
-                        }, 300);
+                        focusOnMesh(mesh);
+                        setTimeout(() => { mesh.material.color.setHex(0x00ff00); }, 300);
                     }
                 }
             });
@@ -361,7 +326,6 @@
                 const input = document.getElementById('newTagInput');
                 const tag = input.value.trim();
                 if (!tag || !state.selectedBlockName) return;
-
                 try {
                     const res = await axios.post("{{ route('warehouse3d.storeTag') }}", { block_name: state.selectedBlockName, tag: tag });
                     if (res.data.success) {
@@ -380,13 +344,8 @@
             async function deleteTagAction(tag) {
                 const confirmed = await showModal(`¿Eliminar la etiqueta "${tag}"?`, 'confirm');
                 if (!confirmed) return;
-
                 try {
-                    const res = await axios.post("{{ route('warehouse3d.deleteTag') }}", {
-                        block_name: state.selectedBlockName,
-                        tag: tag
-                    });
-
+                    const res = await axios.post("{{ route('warehouse3d.deleteTag') }}", { block_name: state.selectedBlockName, tag: tag });
                     if (res.data.success) {
                         const idx = dbBlocks.findIndex(b => b.name === state.selectedBlockName);
                         if (idx !== -1) {
@@ -408,7 +367,6 @@
                 return new Promise((resolve) => {
                     modalTitle.innerText = type === 'confirm' ? 'Confirmación' : 'Atención';
                     modalMessage.innerText = message;
-
                     if (type === 'confirm') {
                         btnCancel.classList.remove('hidden');
                         btnConfirm.classList.replace('w-full', 'w-auto');
@@ -416,24 +374,18 @@
                         btnCancel.classList.add('hidden');
                         btnConfirm.classList.add('w-full');
                     }
-
                     modal.classList.remove('hidden');
                     setTimeout(() => {
                         modal.classList.remove('opacity-0');
                         modalContent.classList.remove('scale-95');
                         modalContent.classList.add('scale-100');
                     }, 10);
-
                     const close = (result) => {
                         modal.classList.add('opacity-0');
                         modalContent.classList.remove('scale-100');
                         modalContent.classList.add('scale-95');
-                        setTimeout(() => {
-                            modal.classList.add('hidden');
-                            resolve(result);
-                        }, 300);
+                        setTimeout(() => { modal.classList.add('hidden'); resolve(result); }, 300);
                     };
-
                     btnConfirm.onclick = () => close(true);
                     btnCancel.onclick = () => close(false);
                 });
@@ -441,7 +393,6 @@
 
             const btnView = document.getElementById('btnModeView');
             const btnEdit = document.getElementById('btnModeEdit');
-
             btnView.onclick = () => setMode('view');
             btnEdit.onclick = () => setMode('edit');
 
@@ -463,6 +414,17 @@
 
             function animate() {
                 requestAnimationFrame(animate);
+
+                if (state.targetCameraPos && state.targetLookAt) {
+                    camera.position.lerp(state.targetCameraPos, 0.05);
+                    controls.target.lerp(state.targetLookAt, 0.05);
+
+                    if (camera.position.distanceTo(state.targetCameraPos) < 0.01) {
+                        state.targetCameraPos = null;
+                        state.targetLookAt = null;
+                    }
+                }
+
                 controls.update();
                 renderer.render(scene, camera);
             }
@@ -474,6 +436,7 @@
                 renderer.setSize(container.clientWidth, container.clientHeight);
             });
         </script>
+
         <style>
             .custom-scrollbar::-webkit-scrollbar {
                 width: 4px;

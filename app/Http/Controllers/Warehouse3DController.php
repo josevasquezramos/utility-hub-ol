@@ -23,14 +23,10 @@ class Warehouse3DController extends Controller
         $block = Block::where('name', $request->block_name)->firstOrFail();
         $tags = $block->tags ?? [];
         $tagToAdd = trim($request->tag);
-        $exists = false;
-        
-        foreach ($tags as $t) {
-            if (strtolower($t) === strtolower($tagToAdd)) {
-                $exists = true;
-                break;
-            }
-        }
+
+        $exists = collect($tags)->contains(function ($t) use ($tagToAdd) {
+            return strtolower($t) === strtolower($tagToAdd);
+        });
 
         if (!$exists) {
             $tags[] = $tagToAdd;
@@ -43,7 +39,10 @@ class Warehouse3DController extends Controller
             ]);
         }
 
-        return response()->json(['success' => false]);
+        return response()->json([
+            'success' => false,
+            'message' => 'La etiqueta ya existe'
+        ]);
     }
 
     public function deleteTag(Request $request)
@@ -56,7 +55,7 @@ class Warehouse3DController extends Controller
         $block = Block::where('name', $request->block_name)->firstOrFail();
         $tags = $block->tags ?? [];
 
-        $tags = array_values(array_filter($tags, function($t) use ($request) {
+        $tags = array_values(array_filter($tags, function ($t) use ($request) {
             return $t !== $request->tag;
         }));
 

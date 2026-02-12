@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Block extends Model
 {
-    protected $fillable = ['name', 'display_name', 'tags'];
+    protected $fillable = ['name', 'tags'];
 
     protected $casts = [
         'tags' => 'array',
