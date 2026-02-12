@@ -33,13 +33,13 @@
         <div
             class="absolute z-10 top-4 left-4 w-full max-w-sm md:w-80 bg-white/95 backdrop-blur-sm shadow-2xl rounded-xl border border-white/20 overflow-hidden flex flex-col max-h-[calc(100%-2rem)] transition-all duration-300">
 
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div class="px-3 py-2 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h3 class="font-bold text-gray-700">Explorador</h3>
             </div>
 
-            <div class="p-4 overflow-y-auto custom-scrollbar">
+            <div class="p-3 overflow-y-auto custom-scrollbar">
 
-                <div class="flex bg-gray-200/50 p-1 rounded-lg mb-5">
+                <div class="flex bg-gray-200/50 p-1 rounded-lg mb-4">
                     <button id="btnModeView"
                         class="flex-1 py-1.5 text-sm font-semibold rounded-md bg-white text-indigo-600 shadow-sm transition-all">
                         Buscar
@@ -50,7 +50,7 @@
                     </button>
                 </div>
 
-                <div id="sectionSearch" class="space-y-4">
+                <div id="sectionSearch" class="space-y-3">
                     <div>
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Filtrar</label>
                         <input type="text" id="searchInput"
@@ -58,30 +58,32 @@
                             placeholder="Buscar etiqueta...">
                     </div>
 
-                    <div id="searchFeedback"
-                        class="hidden p-3 bg-indigo-50 rounded-lg border border-indigo-100 text-sm"></div>
+                    <div id="searchFeedback" class="hidden rounded-lg text-sm"></div>
                 </div>
 
-                <div id="sectionEdit" class="hidden space-y-4">
+                <div id="sectionEdit" class="hidden space-y-3">
                     <div id="emptySelection"
                         class="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
                         <p class="text-sm text-gray-500">Selecciona un bloque</p>
                     </div>
 
                     <div id="blockEditor" class="hidden flex-col animate-fadeIn">
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <span
                                 class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Seleccionado</span>
-                            <h2 id="lblBlockName" class="text-xl font-bold text-gray-800 leading-tight">--</h2>
-                            <p id="lblBlockDisplay" class="text-xs text-gray-400 font-mono mt-1">ID: --</p>
+                            <h2 id="lblBlockName" class="text-lg font-bold text-gray-800 leading-tight">--</h2>
+                            <p id="lblBlockDisplay" class="text-xs text-gray-400 font-mono mt-0.5">ID: --</p>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="text-xs font-bold text-gray-500 uppercase">Etiquetas:</label>
-                            <div id="tagsList" class="flex flex-wrap gap-1.5 mt-2 min-h-[30px]"></div>
+
+                            <div id="tagsList"
+                                class="flex flex-wrap gap-1.5 mt-2 min-h-[30px] max-h-[5.5rem] overflow-y-auto custom-scrollbar content-start">
+                            </div>
                         </div>
 
-                        <div class="pt-4 border-t border-gray-100">
+                        <div class="pt-3 border-t border-gray-100">
                             <label class="text-xs font-bold text-gray-700 mb-1 block">Agregar:</label>
                             <div class="flex gap-2">
                                 <input type="text" id="newTagInput"
@@ -105,8 +107,8 @@
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
         <script type="importmap">
-                    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-                </script>
+                { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+            </script>
 
         <script type="module">
             import * as THREE from 'three';
@@ -172,9 +174,7 @@
 
                         if (dbRecord) {
                             child.material = child.material.clone();
-
                             state.meshes[child.name] = child;
-
                             state.originalMaterials[child.name] = child.material.clone();
                         }
                     }
@@ -242,7 +242,7 @@
                 }
                 tags.forEach(tag => {
                     const badge = document.createElement('div');
-                    badge.className = "flex items-center bg-indigo-50 text-indigo-700 text-[10px] font-bold pl-2 pr-1 py-1 rounded-full border border-indigo-100 shadow-sm";
+                    badge.className = "flex items-center bg-indigo-50 text-indigo-700 text-[10px] font-bold pl-2 pr-1 py-1 rounded-full border border-indigo-100 shadow-sm shrink-0";
 
                     const text = document.createElement('span');
                     text.innerText = tag;
@@ -265,43 +265,92 @@
             function resetColors() {
                 Object.keys(state.meshes).forEach(name => {
                     const mesh = state.meshes[name];
-
-                    // Recuperamos el material original guardado
                     if (state.originalMaterials[name]) {
-                        // Restauramos el color original
                         mesh.material.color.copy(state.originalMaterials[name].color);
-
-                        // Si tenías propiedades metálicas o de rugosidad, también podrías restaurarlas:
-                        mesh.material.metalness = state.originalMaterials[name].metalness;
-                        mesh.material.roughness = state.originalMaterials[name].roughness;
                     } else {
-                        // Fallback por seguridad
                         mesh.material.color.set(0xffffff);
                     }
                 });
             }
 
             const searchInput = document.getElementById('searchInput');
+
             searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 const feedback = document.getElementById('searchFeedback');
+
                 resetColors();
 
                 if (term.length < 2) {
                     feedback.classList.add('hidden');
+                    feedback.innerHTML = '';
                     return;
                 }
 
                 const matches = dbBlocks.filter(b => b.tags && b.tags.some(t => t.toLowerCase().includes(term)));
 
                 feedback.classList.remove('hidden');
+
                 if (matches.length > 0) {
-                    feedback.innerHTML = `<span class="text-green-600 font-bold text-xs">Encontrado en ${matches.length} bloque(s)</span>`;
+                    let html = `
+                <div class="mb-2 p-2 bg-indigo-50 border border-indigo-100 rounded flex justify-between items-center">
+                    <span class="text-indigo-800 font-bold text-xs">Se encontraron ${matches.length} coincidencias</span>
+                </div>
+            `;
+
+                    html += `<div class="max-h-60 overflow-y-auto custom-scrollbar space-y-2 pr-1">`;
+
                     matches.forEach(m => {
                         if (state.meshes[m.name]) state.meshes[m.name].material.color.set(0x00ff00);
+
+                        const matchedTags = m.tags.filter(t => t.toLowerCase().includes(term));
+
+                        const tagsBadges = matchedTags.map(tag =>
+                            `<span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">
+                        ${tag}
+                    </span>`
+                        ).join('');
+
+                        const displayName = m.display_name || m.name;
+
+                        html += `
+                    <div class="result-item bg-white p-2.5 rounded border border-gray-200 shadow-sm hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" data-block="${m.name}">
+                        <div class="flex items-start justify-between mb-1">
+                            <div>
+                                <span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition block leading-tight">${displayName}</span>
+                                <span class="text-[10px] text-gray-400 font-mono">ID: ${m.name}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-1.5 pt-1.5 border-t border-gray-50">
+                            <span class="text-[10px] text-gray-400 block mb-1">Coincidencias:</span>
+                            <div class="flex flex-wrap">
+                                ${tagsBadges}
+                            </div>
+                        </div>
+                    </div>
+                `;
                     });
+
+                    html += `</div>`;
+                    feedback.innerHTML = html;
+
                 } else {
-                    feedback.innerHTML = `<span class="text-red-400 text-xs">No encontrado</span>`;
+                    feedback.innerHTML = `<div class="p-3 bg-red-50 text-red-500 text-xs border border-red-100 rounded text-center">No se encontraron etiquetas con "${term}"</div>`;
+                }
+            });
+
+            document.getElementById('searchFeedback').addEventListener('click', (e) => {
+                const item = e.target.closest('.result-item');
+                if (item) {
+                    const blockName = item.dataset.block;
+                    if (state.meshes[blockName]) {
+                        const mesh = state.meshes[blockName];
+                        mesh.material.color.setHex(0x00ffff);
+                        setTimeout(() => {
+                            mesh.material.color.setHex(0x00ff00);
+                        }, 300);
+                    }
                 }
             });
 
