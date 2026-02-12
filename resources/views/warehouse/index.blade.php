@@ -106,13 +106,14 @@
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
         <script type="importmap">
-                    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-                </script>
+                        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+                    </script>
 
         <script type="module">
             import * as THREE from 'three';
             import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
             import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+            import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
             let dbBlocks = @json($blocks);
             const state = {
@@ -126,33 +127,48 @@
 
             const container = document.getElementById('canvas-container');
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x202025);
-            scene.fog = new THREE.Fog(0x202025, 20, 60);
+            scene.background = new THREE.Color(0xf0f0f5);
+            scene.fog = new THREE.Fog(0xf0f0f5, 20, 80);
 
             const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
             camera.position.set(15, 15, 15);
 
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(renderer.domElement);
 
-            const gridHelper = new THREE.GridHelper(50, 50, 0x444444, 0x333333);
+            const gridHelper = new THREE.GridHelper(50, 50, 0xcccccc, 0xdedede);
             scene.add(gridHelper);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
 
-            const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
-            dirLight.position.set(10, 20, 10);
+            const dirLight = new THREE.DirectionalLight(0xfff0dd, 1.5);
+            dirLight.position.set(10, 30, 20);
             dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.bias = -0.0001;
             scene.add(dirLight);
+
+            const fillLight = new THREE.DirectionalLight(0xddeeff, 0.5);
+            fillLight.position.set(-10, 10, -10);
+            scene.add(fillLight);
 
             const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.maxPolarAngle = Math.PI / 2;
+            controls.screenSpacePanning = false;
 
             const loader = new GLTFLoader();
 
@@ -168,6 +184,14 @@
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+
+                        if (child.material) {
+                            child.material.roughness = 1.0;
+                            child.material.metalness = 0.0;
+                            child.material.envMapIntensity = 0.2;
+                            child.material.needsUpdate = true;
+                        }
+
                         const dbRecord = dbBlocks.find(b => b.name === child.name);
                         if (dbRecord) {
                             child.material = child.material.clone();
@@ -178,15 +202,33 @@
                 });
 
                 const loaderEl = document.getElementById('loaderOverlay');
-                loaderEl.style.opacity = '0';
-                setTimeout(() => loaderEl.remove(), 500);
+                if (loaderEl) {
+                    loaderEl.style.opacity = '0';
+                    setTimeout(() => loaderEl.remove(), 500);
+                }
             }, undefined, (err) => console.error(err));
 
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
+            let isDown = false;
+            let startX = 0;
+            let startY = 0;
 
-            window.addEventListener('click', (event) => {
-                if (event.target.closest('.absolute.z-10') || event.target.closest('#appModal')) return;
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                isDown = true;
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+
+            renderer.domElement.addEventListener('pointerup', (event) => {
+                if (!isDown) return;
+                isDown = false;
+
+                const diffX = Math.abs(event.clientX - startX);
+                const diffY = Math.abs(event.clientY - startY);
+
+                if (diffX > 5 || diffY > 5) return;
+
                 if (state.mode !== 'edit') return;
 
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -215,7 +257,6 @@
 
                 if (state.meshes[name]) {
                     state.meshes[name].material.color.setHex(0xffaa00);
-                    focusOnMesh(state.meshes[name]);
                 }
 
                 document.getElementById('emptySelection').classList.add('hidden');
@@ -295,7 +336,7 @@
                     matches.forEach(m => {
                         if (state.meshes[m.name]) state.meshes[m.name].material.color.set(0x00ff00);
                         const matchedTags = m.tags.filter(t => t.toLowerCase().includes(term));
-                        const tagsBadges = matchedTags.map(tag => `<span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">${tag}</span>`).join('');
+                        const tagsBadges = matchedTags.map(tag => `<span class="inline-block bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">${tag}</span>`).join('');
                         html += `<div class="result-item bg-white p-2.5 rounded border border-gray-200 shadow-sm hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" data-block="${m.name}"><div class="flex items-start justify-between mb-1"><div><span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition block leading-tight">${m.name}</span></div></div><div class="mt-1.5 pt-1.5 border-t border-gray-50"><div class="flex flex-wrap">${tagsBadges}</div></div></div>`;
                     });
                     html += `</div>`;
