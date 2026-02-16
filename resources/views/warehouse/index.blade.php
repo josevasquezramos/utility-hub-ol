@@ -106,8 +106,8 @@
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
         <script type="importmap">
-                        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-                    </script>
+            { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+        </script>
 
         <script type="module">
             import * as THREE from 'three';
@@ -315,10 +315,25 @@
                 });
             }
 
+            const normalizeText = (text) => {
+                if (!text) return '';
+                return text.toString()
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/\s+/g, "")
+                    .replace(/h/g, "")
+                    .replace(/v/g, "b")
+                    .replace(/y/g, "i")
+                    .replace(/z/g, "s")
+                    .replace(/c([ei])/g, "s$1")
+                    .replace(/ll/g, "i");
+            };
+
             const searchInput = document.getElementById('searchInput');
 
             searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
+                const term = normalizeText(e.target.value);
                 const feedback = document.getElementById('searchFeedback');
                 resetColors();
                 if (term.length < 2) {
@@ -326,23 +341,23 @@
                     feedback.innerHTML = '';
                     return;
                 }
-
-                const matches = dbBlocks.filter(b => b.tags && b.tags.some(t => t.toLowerCase().includes(term)));
+                const matches = dbBlocks.filter(b =>
+                    b.tags && b.tags.some(t => normalizeText(t).includes(term))
+                );
                 feedback.classList.remove('hidden');
-
                 if (matches.length > 0) {
                     let html = `<div class="mb-2 p-2 bg-indigo-50 border border-indigo-100 rounded flex justify-between items-center"><span class="text-indigo-800 font-bold text-xs">Se encontraron ${matches.length} coincidencias</span></div>`;
                     html += `<div class="max-h-60 overflow-y-auto custom-scrollbar space-y-2 pr-1">`;
                     matches.forEach(m => {
                         if (state.meshes[m.name]) state.meshes[m.name].material.color.set(0x00ff00);
-                        const matchedTags = m.tags.filter(t => t.toLowerCase().includes(term));
+                        const matchedTags = m.tags.filter(t => normalizeText(t).includes(term));
                         const tagsBadges = matchedTags.map(tag => `<span class="inline-block bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200 mr-1 mb-1 shadow-sm">${tag}</span>`).join('');
                         html += `<div class="result-item bg-white p-2.5 rounded border border-gray-200 shadow-sm hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" data-block="${m.name}"><div class="flex items-start justify-between mb-1"><div><span class="text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition block leading-tight">${m.name}</span></div></div><div class="mt-1.5 pt-1.5 border-t border-gray-50"><div class="flex flex-wrap">${tagsBadges}</div></div></div>`;
                     });
                     html += `</div>`;
                     feedback.innerHTML = html;
                 } else {
-                    feedback.innerHTML = `<div class="p-3 bg-red-50 text-red-500 text-xs border border-red-300 rounded text-center">No se encontraron etiquetas con "${term}"</div>`;
+                    feedback.innerHTML = `<div class="p-3 bg-red-50 text-red-500 text-xs border border-red-300 rounded text-center">No se encontraron etiquetas para "${e.target.value}"</div>`;
                 }
             });
 
