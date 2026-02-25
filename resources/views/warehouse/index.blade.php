@@ -106,8 +106,8 @@
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
         <script type="importmap">
-            { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-        </script>
+                { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+            </script>
 
         <script type="module">
             import * as THREE from 'three';
@@ -282,26 +282,97 @@
             function renderTags(tags) {
                 const container = document.getElementById('tagsList');
                 container.innerHTML = '';
+
                 if (!tags || tags.length === 0) {
                     container.innerHTML = '<span class="text-xs text-gray-400 italic">Sin etiquetas</span>';
                     return;
                 }
+
                 tags.forEach(tag => {
                     const badge = document.createElement('div');
-                    badge.className = "flex items-center bg-indigo-50 text-indigo-700 text-[10px] font-bold pl-2 pr-1 py-1 rounded-full border border-indigo-100 shadow-sm shrink-0";
-                    const text = document.createElement('span');
-                    text.innerText = tag;
-                    badge.appendChild(text);
+                    badge.className = "flex items-center bg-indigo-50 text-indigo-700 text-[10px] font-bold pl-2 pr-1 py-1 rounded-full border border-indigo-100 shadow-sm shrink-0 group transition-all";
+
+                    const textContainer = document.createElement('div');
+                    textContainer.className = "flex items-center relative";
+
+                    const textSpan = document.createElement('span');
+                    textSpan.innerText = tag;
+                    textSpan.className = "cursor-pointer hover:text-indigo-900 border-b border-transparent hover:border-indigo-400 transition-colors";
+                    textSpan.title = "Clic para editar";
+
+                    const inputField = document.createElement('input');
+                    inputField.type = "text";
+                    inputField.value = tag;
+                    inputField.className = "hidden text-[10px] text-indigo-900 bg-white border border-indigo-300 rounded px-1 py-0 w-20 outline-none focus:ring-1 focus:ring-indigo-500 h-4";
+
+                    textSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        textSpan.classList.add('hidden');
+                        inputField.classList.remove('hidden');
+                        inputField.focus();
+                        inputField.select();
+                    };
+
+                    const saveEdit = () => {
+                        const newTag = inputField.value.trim();
+                        if (newTag && newTag !== tag) {
+                            editTagAction(tag, newTag);
+                        } else {
+                            inputField.classList.add('hidden');
+                            textSpan.classList.remove('hidden');
+                            inputField.value = tag;
+                        }
+                    };
+
+                    inputField.onblur = saveEdit;
+                    inputField.onkeypress = (e) => {
+                        if (e.key === 'Enter') {
+                            inputField.blur();
+                        }
+                    };
+
+                    textContainer.appendChild(textSpan);
+                    textContainer.appendChild(inputField);
+                    badge.appendChild(textContainer);
+
                     const closeBtn = document.createElement('button');
                     closeBtn.innerHTML = "&times;";
-                    closeBtn.className = "ml-1.5 text-indigo-400 hover:text-red-500 font-bold px-1 rounded transition";
+                    closeBtn.className = "ml-1.5 text-indigo-400 hover:text-red-500 font-bold px-1 rounded transition opacity-70 group-hover:opacity-100";
                     closeBtn.onclick = (e) => {
                         e.stopPropagation();
                         deleteTagAction(tag);
                     };
+
                     badge.appendChild(closeBtn);
                     container.appendChild(badge);
                 });
+            }
+
+            async function editTagAction(oldTag, newTag) {
+                try {
+                    const res = await axios.post("{{ route('warehouse3d.updateTag') }}", {
+                        block_name: state.selectedBlockName,
+                        old_tag: oldTag,
+                        new_tag: newTag
+                    });
+
+                    if (res.data.success) {
+                        const idx = dbBlocks.findIndex(b => b.name === state.selectedBlockName);
+                        if (idx !== -1) {
+                            dbBlocks[idx].tags = res.data.tags;
+                            renderTags(res.data.tags);
+                        }
+                    } else {
+                        showModal(res.data.message || 'Error al actualizar', 'alert');
+                        const blockData = dbBlocks.find(b => b.name === state.selectedBlockName);
+                        renderTags(blockData.tags);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showModal('Error de conexión', 'alert');
+                    const blockData = dbBlocks.find(b => b.name === state.selectedBlockName);
+                    renderTags(blockData.tags);
+                }
             }
 
             function resetColors() {
