@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class ScheduleExportController extends Controller
 {
@@ -16,12 +17,12 @@ class ScheduleExportController extends Controller
     {
         $request->validate([
             'activity_id' => 'required|exists:activities,id',
-            'date_range' => 'required|string', 
+            'date_range' => 'required|string',
         ]);
 
         $dates = preg_split('/ (to|a) /', $request->date_range);
         $start = Carbon::parse($dates[0]);
-        $end = count($dates) > 1 ? Carbon::parse($dates[1]) : $start; 
+        $end = count($dates) > 1 ? Carbon::parse($dates[1]) : $start;
 
         $activity = Activity::findOrFail($request->activity_id);
 
@@ -45,7 +46,16 @@ class ScheduleExportController extends Controller
 
         $pdf->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Cronograma.pdf');
+        $formattedStart = $start->format('d-m-Y');
+        $formattedEnd = $end->format('d-m-Y');
+
+        if ($start->ne($end)) {
+            $fileName = "Cronograma {$activity->name} {$formattedStart} {$formattedEnd}.pdf";
+        } else {
+            $fileName = "Cronograma {$activity->name} {$formattedStart}.pdf";
+        }
+
+        return $pdf->stream($fileName);
     }
 
     public function downloadExcel(Request $request)
