@@ -239,17 +239,26 @@
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-visible modal-panel">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                 <h3 class="text-lg font-bold text-gray-800">Generar PDF</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Actividad: <span id="exportActivityName"
-                        class="font-bold"></span></p>
+                <p class="text-xs text-gray-500 mt-0.5">Actividad: <span id="exportActivityName" class="font-bold"></span></p>
             </div>
             <form action="{{ route('schedule.export-pdf') }}" method="POST" target="_blank">
                 @csrf
                 <input type="hidden" name="activity_id" id="exportActivityId">
-                <div class="px-6 py-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Fechas</label>
-                    <input type="text" name="date_range" id="dateRangePicker"
-                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 pl-3 bg-white"
-                        placeholder="Seleccionar fechas..." required>
+                
+                <div class="px-6 py-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Fechas</label>
+                        <input type="text" name="date_range" id="dateRangePicker"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 pl-3 bg-white"
+                            placeholder="Seleccionar fechas..." required>
+                    </div>
+                    <div>
+                        <label for="perPage" class="block text-sm font-medium text-gray-700 mb-2">Registros por página</label>
+                        <input type="number" name="per_page" id="perPage" min="3" max="10" value="5"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 pl-3 bg-white"
+                            required>
+                        <p class="mt-1 text-xs text-gray-500">Ajusta el tamaño para que encaje mejor en la hoja (Mín: 3, Máx: 10).</p>
+                    </div>
                 </div>
                 <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200 rounded-b-xl">
                     <button type="button" onclick="closeModal('exportModal')"

@@ -3,6 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Cronograma</title>
+    
+    @php
+        $thFontSize = 16;
+        $tdFontSize = 16;
+        $h1FontSize = 26;
+        $tdPaddingY = 30;
+        $thPadding  = 15;
+
+        if ($perPage > 5) {
+            $diff = $perPage - 5;
+            $thFontSize = max(9, round(16 - ($diff * 1.5)));
+            $tdFontSize = max(9, round(16 - ($diff * 1.5)));
+            $h1FontSize = max(18, round(26 - ($diff * 1.2)));
+            $tdPaddingY = max(5, round(30 - ($diff * 4.5)));
+            $thPadding  = max(8, round(15 - ($diff * 1.5)));
+        } elseif ($perPage < 5) {
+            $diff = 5 - $perPage;
+            $thFontSize = min(18, round(16 + ($diff * 1)));
+            $tdFontSize = min(18, round(16 + ($diff * 1)));
+            $tdPaddingY = min(40, round(30 + ($diff * 5)));
+        }
+    @endphp
+
     <style>
         @page {
             size: A4 landscape;
@@ -18,12 +41,12 @@
 
         h1 {
             text-align: center;
-            font-size: 26pt;
+            font-size: {{ $h1FontSize }}pt;
             color: #1B4F72;
             text-transform: uppercase;
             font-weight: bolder;
             margin-top: 0;
-            margin-bottom: 50px;
+            margin-bottom: {{ $tdPaddingY + 10 }}px;
         }
 
         table {
@@ -35,10 +58,10 @@
         th {
             background-color: #2874A6;
             color: #ffffff !important;
-            font-size: 16pt;
+            font-size: {{ $thFontSize }}pt;
             text-transform: uppercase;
             font-weight: bold;
-            padding: 15px;
+            padding: {{ $thPadding }}px;
             border: 2px solid #1B4F72;
         }
 
@@ -46,9 +69,9 @@
             border: 2px solid #1B4F72;
             text-align: center;
             vertical-align: middle;
-            font-size: 16pt;
+            font-size: {{ $tdFontSize }}pt;
             color: #1B4F72;
-            padding: 30px 10px; 
+            padding: {{ $tdPaddingY }}px 10px; 
         }
 
         .col-day {
@@ -64,7 +87,7 @@
         .date-text {
             color: #1B4F72;
             font-weight: bold;
-            font-size: 16pt;
+            font-size: {{ $tdFontSize }}pt;
         }
 
         .page-break {
