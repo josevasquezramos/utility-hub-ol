@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Warehouse3DController;
 use App\Http\Controllers\ConversionController;
 use App\Http\Controllers\ProfileController;
@@ -26,6 +27,9 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
 
+    Route::get('/chat-sql', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat-sql/ask', [ChatController::class, 'ask'])->name('chat.ask');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -44,5 +48,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/warehouse-3d/tag/delete', [Warehouse3DController::class, 'deleteTag'])->name('warehouse3d.deleteTag');
     Route::post('/warehouse-3d/tag/update', [Warehouse3DController::class, 'updateTag'])->name('warehouse3d.updateTag');
 });
+
 
 require __DIR__.'/auth.php';
