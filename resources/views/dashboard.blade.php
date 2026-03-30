@@ -33,6 +33,23 @@
                             </div>
                         </div>
                     </a>
+
+                    <a href="{{ route('chat.index') }}" class="block group">
+                        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-md transition-shadow duration-300 border border-transparent hover:border-emerald-300 h-full flex flex-col justify-between">
+                            <div class="p-6 flex items-start space-x-4">
+                                <div class="p-3 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Inteligencia Artificial</h3>
+                                    <p class="mt-2 text-sm text-gray-600">Consultas rápidas a la base de datos con lenguaje natural.</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-6 py-3 border-t border-gray-100 flex justify-end">
+                                <span class="text-sm font-medium text-emerald-600 group-hover:translate-x-1 transition-transform">Ingresar &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </section>
 

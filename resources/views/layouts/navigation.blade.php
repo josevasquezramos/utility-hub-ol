@@ -18,7 +18,7 @@
                         
                         <button @click="open = ! open" @click.outside="open = false" 
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out h-full focus:outline-none
-                            {{ request()->routeIs('schedule.*') || request()->routeIs('conversions.*') || request()->routeIs('warehouse3d.*')
+                            {{ request()->routeIs('schedule.*') || request()->routeIs('conversions.*') || request()->routeIs('warehouse3d.*') || request()->routeIs('chat.*')
                                 ? 'border-indigo-400 text-gray-900' 
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' 
                             }}">
@@ -47,6 +47,9 @@
                             </div>
                             <a href="{{ route('schedule.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition ease-in-out duration-150">
                                 Cronograma
+                            </a>
+                            <a href="{{ route('chat.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition ease-in-out duration-150">
+                                Inteligencia Artificial
                             </a>
 
                             <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border-y border-gray-100 mt-1">
