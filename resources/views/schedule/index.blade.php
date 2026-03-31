@@ -88,6 +88,13 @@
                     </svg>
                     Actividad
                 </button>
+                <a href="{{ route('schedule.history.index') }}"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-200 focus:outline-none transition ease-in-out duration-150 shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Historial
+                </a>
                 <button onclick="openModal('excelModal')"
                     class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,6 +265,15 @@
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 pl-3 bg-white"
                             required>
                         <p class="mt-1 text-xs text-gray-500">Ajusta el tamaño para que encaje mejor en la hoja (Mín: 3, Máx: 10).</p>
+                    </div>
+                </div>
+                <div class="px-6 pb-6 space-y-4">
+                    <div class="flex items-center">
+                        <input id="save_system" name="save_system" type="checkbox" value="1" checked
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="save_system" class="ml-2 block text-sm text-gray-900">
+                            Guardar copia en el sistema
+                        </label>
                     </div>
                 </div>
                 <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200 rounded-b-xl">

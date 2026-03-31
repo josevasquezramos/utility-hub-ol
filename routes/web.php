@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\PdfDocumentController;
 use App\Http\Controllers\Warehouse3DController;
 use App\Http\Controllers\ConversionController;
 use App\Http\Controllers\ProfileController;
@@ -40,6 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/schedule/assignment', [ScheduleController::class, 'updateAssignment'])->name('schedule.assignment.update');
     Route::post('/schedule/export-pdf', [ScheduleExportController::class, 'download'])->name('schedule.export-pdf');
     Route::post('/schedule/export-excel', [ScheduleExportController::class, 'downloadExcel'])->name('schedule.export-excel');
+
+    Route::get('/schedule/history', [PdfDocumentController::class, 'index'])->name('schedule.history.index');
+    Route::delete('/schedule/history/{document}', [PdfDocumentController::class, 'destroy'])->name('schedule.history.destroy');
 
     Route::get('/conversions', [ConversionController::class, 'index'])->name('conversions.index');
 

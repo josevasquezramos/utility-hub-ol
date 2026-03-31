@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use App\Models\PdfDocument;
+use Illuminate\Support\Facades\Storage;
 
 class ScheduleExportController extends Controller
 {
@@ -57,6 +59,16 @@ class ScheduleExportController extends Controller
             $fileName = "Cronograma {$activity->name} - {$formattedStart} {$formattedEnd}.pdf";
         } else {
             $fileName = "Cronograma {$activity->name} - {$formattedStart}.pdf";
+        }
+
+        if ($request->has('save_system')) {
+            $safeName = time() . '_' . Str::slug(str_replace('.pdf', '', $fileName)) . '.pdf';
+            $path = 'pdfs/' . $safeName;
+            Storage::disk('public')->put($path, $pdf->output());
+            PdfDocument::create([
+                'file_name' => $fileName,
+                'file_path' => $path
+            ]);
         }
 
         return $pdf->stream($fileName);
